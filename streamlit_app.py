@@ -13,48 +13,70 @@ st.set_page_config(
 st.markdown(
     """
 <style>
+  [data-testid="stApp"] {
+    background-color: #ffffff;
+    color: #111111;
+  }
+  [data-testid="stApp"] * { color: #111111; }
+  [data-testid="stHeader"] { background-color: #ffffff; }
   .block-container {
     padding-top: 1.2rem; padding-bottom: 0;
     padding-left: 2rem;  padding-right: 2rem;
     max-width: 100%;
   }
   .step-label {
-    font-size: 10px; font-weight: 700; color: #888;
+    font-size: 10px; font-weight: 700; color: #333;
     letter-spacing: 0.8px; text-transform: uppercase; margin: 0 0 2px 0;
   }
   .city-name {
-    font-size: 26px; font-weight: 900; color: #1a1a2e;
+    font-size: 26px; font-weight: 900; color: #111111;
     text-decoration: underline; margin: 0; line-height: 1.1;
   }
   .map-desc {
-    background: white; border: 1px solid #ddd; border-radius: 4px;
+    background: white; border: 1px solid #bbb; border-radius: 4px;
     padding: 10px 12px; font-size: 12px; line-height: 1.6;
-    max-width: 340px; margin-bottom: 6px;
+    max-width: 340px; margin-bottom: 6px; color: #111111;
   }
   .legend-wrap {
-    display: flex; align-items: center; gap: 10px;
-    font-size: 11px; color: #666; margin-top: 6px;
+    display: flex; align-items: flex-start; gap: 12px;
+    font-size: 13px; color: #222; margin-bottom: 8px;
   }
   .legend-bar {
-    width: 180px; height: 11px;
+    width: 320px; height: 20px;
     background: linear-gradient(to right, #deedf0, #142850);
-    border-radius: 2px; flex-shrink: 0;
+    border-radius: 4px; flex-shrink: 0;
   }
   .legend-labels {
-    display: flex; width: 180px; justify-content: space-between;
-    font-size: 10px; color: #666; margin-top: 2px;
+    display: flex; width: 320px; justify-content: space-between;
+    font-size: 12px; color: #222; margin-top: 4px; font-weight: 500;
   }
   .section-title {
-    font-size: 15px; font-weight: 700; color: #1a1a2e;
+    font-size: 15px; font-weight: 700; color: #111111;
     margin: 4px 0 0 0;
   }
   .sub-axis-label {
-    font-size: 10px; color: #888; margin-top: -4px; margin-bottom: 4px;
+    font-size: 10px; color: #333; margin-top: -4px; margin-bottom: 4px;
   }
   div[data-testid="stRadio"] > div[role="radiogroup"] { gap: 4px; }
   div[data-testid="stRadio"] > div[role="radiogroup"] > label {
-    border: 1px solid #ccc; border-radius: 20px;
-    padding: 4px 13px; font-size: 13px; cursor: pointer;
+    border: 1px solid #aaa; border-radius: 20px;
+    padding: 4px 13px; font-size: 13px; cursor: pointer; color: #111111;
+  }
+  /* Selectbox / dropdown — white text on the dark control */
+  div[data-testid="stSelectbox"] > div[data-baseweb="select"] > div,
+  div[data-testid="stSelectbox"] span {
+    color: #ffffff !important;
+  }
+  /* Override Streamlit's default dark-blue primary buttons */
+  div[data-testid="stButton"] > button {
+    background-color: #f0f0f0 !important;
+    color: #111111 !important;
+    border: 1px solid #aaa !important;
+    border-radius: 6px !important;
+  }
+  div[data-testid="stButton"] > button:hover {
+    background-color: #e0e0e0 !important;
+    border-color: #888 !important;
   }
   #MainMenu { visibility: hidden; }
   footer    { visibility: hidden; }
@@ -176,12 +198,12 @@ def make_bar_chart(labels, values, highlight_label, x_title, height=210):
         xaxis=dict(
             range=[min(values) - x_pad, max(values) + x_pad],
             title=x_title,
-            title_font=dict(size=9, color="#888"),
-            tickfont=dict(size=8),
-            gridcolor="#f0f0f0",
+            title_font=dict(size=9, color="#333"),
+            tickfont=dict(size=8, color="#111"),
+            gridcolor="#e8e8e8",
             zeroline=False,
         ),
-        yaxis=dict(tickfont=dict(size=11), autorange="reversed"),
+        yaxis=dict(tickfont=dict(size=11, color="#111"), autorange="reversed"),
         plot_bgcolor="white",
         paper_bgcolor="white",
         showlegend=False,
@@ -242,12 +264,21 @@ with map_col:
         "Net Change": "Net change in expected units per year",
         "Percent Change": "Percent change in expected units per year",
     }
+    # Legend — shown above the map
     st.markdown(
-        f'<div class="map-desc">'
-        f"<strong>{unit_desc[unit]}</strong> under the "
-        f"<strong>{policy}</strong> policy scenario and "
-        f"<strong>{economic}</strong> economic conditions"
-        f"</div>",
+        f"""
+    <div class="legend-wrap">
+      <div>
+        <div style="font-size:12px;color:#666;margin-bottom:4px;">
+          <strong>{unit_desc[unit]}</strong> under the
+          <strong>{policy}</strong> policy scenario and
+          <strong>{economic}</strong> economic conditions
+        </div>
+        <div class="legend-bar"></div>
+        <div class="legend-labels"><span>0%</span><span>+350%</span><span>+700%</span></div>
+      </div>
+    </div>
+    """,
         unsafe_allow_html=True,
     )
 
@@ -271,19 +302,6 @@ with map_col:
     )
     st.pydeck_chart(deck, use_container_width=True, height=500)
 
-    # Legend
-    st.markdown(
-        """
-    <div class="legend-wrap">
-      <div>
-        <div class="legend-bar"></div>
-        <div class="legend-labels"><span>0%</span><span>+350%</span><span>+700%</span></div>
-      </div>
-    </div>
-    """,
-        unsafe_allow_html=True,
-    )
-
 
 with right_col:
     # Info buttons
@@ -299,8 +317,6 @@ with right_col:
         use_container_width=True,
         key="policy_info_btn",
     )
-
-    st.markdown("---")
 
     # Policy impact chart
     st.markdown(
