@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pydeck as pdk
 import numpy as np
 import plotly.graph_objects as go
@@ -264,24 +265,6 @@ with map_col:
         "Net Change": "Net change in expected units per year",
         "Percent Change": "Percent change in expected units per year",
     }
-    # Legend — shown above the map
-    st.markdown(
-        f"""
-    <div class="legend-wrap">
-      <div>
-        <div style="font-size:12px;color:#666;margin-bottom:4px;">
-          <strong>{unit_desc[unit]}</strong> under the
-          <strong>{policy}</strong> policy scenario and
-          <strong>{economic}</strong> economic conditions
-        </div>
-        <div class="legend-bar"></div>
-        <div class="legend-labels"><span>0%</span><span>+350%</span><span>+700%</span></div>
-      </div>
-    </div>
-    """,
-        unsafe_allow_html=True,
-    )
-
     geojson = generate_geojson(policy, economic)
     layer = pdk.Layer(
         "GeoJsonLayer",
@@ -300,7 +283,38 @@ with map_col:
         map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
         tooltip={"html": "<b>Value:</b> {value}%", "style": {"fontSize": "12px"}},
     )
-    st.pydeck_chart(deck, use_container_width=True, height=500)
+
+    # Build legend HTML to overlay inside the map
+    legend_overlay = f"""
+    <div style="
+        position: fixed; top: 14px; left: 14px; z-index: 1000;
+        background: rgba(255,255,255,0.93);
+        border: 1px solid #ccc; border-radius: 6px;
+        padding: 12px 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        max-width: 370px;
+    ">
+      <div style="font-size:12px; color:#222; line-height:1.6; margin-bottom:8px;">
+        <strong>{unit_desc[unit]}</strong> under the
+        <strong>{policy}</strong> policy scenario and
+        <strong>{economic}</strong> economic conditions
+      </div>
+      <div style="
+          width: 300px; height: 18px;
+          background: linear-gradient(to right, #deedf0, #142850);
+          border-radius: 3px; margin-bottom: 5px;
+      "></div>
+      <div style="display:flex; width:300px; justify-content:space-between;
+                  font-size:11px; color:#333; font-weight:600;">
+        <span>0%</span><span>+350%</span><span>+700%</span>
+      </div>
+    </div>
+    """
+
+    map_html = deck.to_html(as_string=True, notebook_display=False)
+    map_html = map_html.replace("</body>", legend_overlay + "</body>")
+    components.html(map_html, height=520)
 
 
 with right_col:
